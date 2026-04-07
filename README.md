@@ -1,27 +1,25 @@
 # Kkami.nl Product Scraper
 
-Scrape product data from kkami.nl — a B2B wholesale platform for Korean children's fashion. Returns title, SKU, images, categories, breadcrumbs, availability, variant options, and more. Supports both individual product pages and category or brand pages for bulk scraping. Optional login for price data.
+Scrape product data from kkami.nl — a B2B wholesale platform for Korean children's fashion. Returns title, SKU, images, categories, breadcrumbs, availability, variant options, short description, and full description. Supports both individual product pages and category or brand pages for bulk scraping with automatic pagination.
 
 ---
 
 ## What data does it extract?
 
-| Field | Description | Auth required |
-|---|---|---|
-| `title` | Product name | No |
-| `sku` | Product SKU / item ID | No |
-| `productId` | Internal WooCommerce product ID | No |
-| `brand` | Brand name | No |
-| `categories` | Category hierarchy | No |
-| `breadcrumbs` | Full breadcrumb path with URLs | No |
-| `images` | All product image URLs | No |
-| `availability` | Stock availability text | No |
-| `variants` | Variant attribute names and options (e.g. size, colour) | No |
-| `shortDescription` | Short product description | No |
-| `description` | Full product description | No |
-| `price` | Current price (sale price if on sale) | Yes |
-| `originalPrice` | Original price before discount | Yes |
-| `currency` | Currency code (EUR) | Yes |
+| Field | Description |
+|---|---|
+| `url` | Product page URL |
+| `productId` | Internal WooCommerce product ID |
+| `title` | Product name |
+| `sku` | Product SKU / item ID |
+| `brand` | Brand name |
+| `availability` | Stock availability text |
+| `categories` | Category hierarchy (e.g. Child, Junior, Child unisex) |
+| `breadcrumbs` | Full breadcrumb path with URLs |
+| `images` | All product image URLs |
+| `variants` | Variant attribute names and options (e.g. size, colour) |
+| `shortDescription` | Short product description |
+| `description` | Full product description |
 
 ---
 
@@ -29,8 +27,7 @@ Scrape product data from kkami.nl — a B2B wholesale platform for Korean childr
 
 1. Enter one or more kkami.nl URLs in the **Start URLs** field.
 2. Optionally set **Max Products** to limit the run (0 = no limit).
-3. To include prices: enter your kkami.nl **Username** and **Password**.
-4. Run the actor and download results as JSON, CSV, or Excel.
+3. Run the actor and download results as JSON, CSV, or Excel.
 
 ### Supported URL types
 
@@ -39,14 +36,6 @@ Scrape product data from kkami.nl — a B2B wholesale platform for Korean childr
 - **Category page**: `https://www.kkami.nl/shop/child/`
 
 Category and brand pages are automatically paginated — all products across all pages are scraped.
-
----
-
-## Authentication and pricing
-
-Kkami.nl is a B2B wholesale platform. Product prices are only visible to registered accounts. When you provide valid login credentials, the actor logs in before scraping and includes `price`, `originalPrice`, and `currency` in every product record.
-
-Credentials are stored as a secret and never logged or included in output.
 
 ---
 
@@ -59,9 +48,6 @@ Credentials are stored as a secret and never logged or included in output.
   "title": "Madeleine Set (set of 3)",
   "sku": "461017MBSD",
   "brand": null,
-  "price": null,
-  "originalPrice": null,
-  "currency": "EUR",
   "availability": "Possibly (partially) on backorder",
   "categories": ["Child", "Junior", "Child unisex", "Junior unisex"],
   "breadcrumbs": [
@@ -79,3 +65,38 @@ Credentials are stored as a secret and never logged or included in output.
   "description": null
 }
 ```
+
+---
+
+## Frequently asked questions
+
+**Can I scrape all products from a brand page?**
+Yes. Enter the brand page URL (e.g. `https://www.kkami.nl/brand/bonito/`) and the actor will automatically paginate through all pages and return every product.
+
+**Can I scrape multiple categories or brands in one run?**
+Yes. Add multiple URLs to the Start URLs field. The actor processes each one sequentially.
+
+**Can I use this actor via the Apify API?**
+Yes. Use the [Run Actor](https://docs.apify.com/api/v2#/reference/actors/run-collection/run-actor) endpoint with your actor ID and input JSON. Results are available as JSON, CSV, or Excel via the dataset API.
+
+**Can I use this actor through an MCP Server?**
+Yes. Via the [Apify MCP server](https://mcp.apify.com), you can call this actor from any MCP-compatible AI assistant (Claude, ChatGPT, etc.) to scrape kkami.nl products in real time.
+
+**Is scraping kkami.nl legal?**
+This actor only accesses publicly available pages — the same data visible to any visitor without an account. Always review kkami.nl's terms of service before scraping.
+
+---
+
+## Changelog
+
+### 2026-04-07 — v0.1
+- Initial release
+- Supports product pages, category pages, and brand pages
+- Automatic pagination for category and brand listings
+- Extracts title, SKU, images, categories, breadcrumbs, availability, variants, and descriptions
+
+---
+
+## Your feedback
+
+Found a bug or have a feature request? [Open an issue](https://github.com/apify/apify-community/issues) or contact us through the Apify platform.

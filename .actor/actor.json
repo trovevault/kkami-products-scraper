@@ -2,7 +2,7 @@
     "actorSpecification": 1,
     "name": "kkami-products-scraper",
     "title": "Kkami.nl Product Scraper",
-    "description": "Scrape product data from kkami.nl — title, SKU, images, categories, availability, breadcrumbs, and more. Supports category and brand pages for bulk scraping. Optional login for price data.",
+    "description": "Scrape product data from kkami.nl — title, SKU, images, categories, availability, variants, breadcrumbs, and descriptions. Supports category and brand pages with automatic pagination. Export data, run via API, schedule and monitor runs, or integrate with other tools.",
     "version": "0.1",
     "readme": "../README.md",
     "meta": {

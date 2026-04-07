@@ -21,19 +21,6 @@
             "default": 0,
             "minimum": 0
         },
-        "username": {
-            "title": "Kkami Username (optional)",
-            "type": "string",
-            "description": "Your kkami.nl account username or email address. When provided together with a password, the actor logs in before scraping so that product prices are included in the output. Leave blank to scrape public data only.",
-            "editor": "textfield"
-        },
-        "password": {
-            "title": "Kkami Password (optional)",
-            "type": "string",
-            "description": "Your kkami.nl account password. Required together with a username to enable authenticated scraping and unlock price data. Stored as a secret and never logged.",
-            "editor": "textfield",
-            "isSecret": true
-        },
         "proxyConfiguration": {
             "title": "Proxy Configuration",
             "type": "object",

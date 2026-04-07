@@ -7,8 +7,6 @@ const input = await Actor.getInput();
 const {
     startUrls = [],
     maxProducts = 0,
-    username,
-    password,
     proxyConfiguration: proxyConfig,
     datasetId,
 } = input || {};
@@ -72,55 +70,6 @@ const siteFetch = async (url, options = {}) => {
 };
 
 // ---------------------------------------------------------------------------
-// Login — POST WooCommerce login form, populate cookie jar with session
-// ---------------------------------------------------------------------------
-const login = async () => {
-    log.info('Logging in to kkami.nl...');
-
-    const loginPage = await siteFetch('https://www.kkami.nl/my-account/');
-    const html = await loginPage.text();
-
-    const nonceMatch = html.match(/id="woocommerce-login-nonce"[^>]*value="([^"]+)"/);
-    if (!nonceMatch) throw new Error('Could not find login nonce on /my-account/ page.');
-    const nonce = nonceMatch[1];
-
-    const refererMatch = html.match(/name="_wp_http_referer"[^>]*value="([^"]+)"/);
-    const wpReferer = refererMatch ? refererMatch[1] : '/my-account/';
-
-    const body = new URLSearchParams({
-        username,
-        password,
-        'woocommerce-login-nonce': nonce,
-        '_wp_http_referer': wpReferer,
-        redirect: '',
-        login: 'Log in',
-    });
-
-    const response = await siteFetch('https://www.kkami.nl/my-account/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            Referer: 'https://www.kkami.nl/my-account/',
-            Origin: 'https://www.kkami.nl',
-        },
-        body: body.toString(),
-        redirect: 'follow',
-    });
-
-    const responseHtml = await response.text();
-
-    if (responseHtml.includes('woocommerce-error') || responseHtml.includes('woocommerce-login-nonce')) {
-        const errMatch = responseHtml.match(/<li>(.*?)<\/li>/s);
-        const msg = errMatch ? errMatch[1].replace(/<[^>]+>/g, '').trim() : 'Invalid credentials.';
-        log.warning(`Login failed: ${msg} — continuing without price data.`);
-        return false;
-    }
-
-    log.info('Login successful — price data will be included in output.');
-    return true;
-};
-
-// ---------------------------------------------------------------------------
 // Parse helpers
 // ---------------------------------------------------------------------------
 const extractProductLinks = (html) => {
@@ -163,18 +112,15 @@ const scrapeProduct = async (url, prefetchedHtml = null) => {
     const titleMatch = html.match(/<h1[^>]*class="[^"]*product_title[^"]*"[^>]*>(.*?)<\/h1>/s);
     const title = titleMatch ? stripTags(titleMatch[1]) : null;
 
-    // SKU + categories + currency — from the GA view_item event only (scoped to avoid
+    // SKU + categories — from the GA view_item event only (scoped to avoid
     // picking up data from related products or navigation events on the same page).
     const viewItemMatch = html.match(/gtag\s*\(\s*'event'\s*,\s*'view_item'[\s\S]*?JSON\.parse\(`([\s\S]*?)`\)/);
     let sku = null;
-    let currency = 'EUR';
     let categories = [];
     if (viewItemMatch) {
         const raw = viewItemMatch[1];
         const skuM = raw.match(/\\"item_id\\":\\"([^\\]+)\\"/);
         if (skuM) sku = skuM[1];
-        const currM = raw.match(/\\"currency\\":\\"([^\\]+)\\"/);
-        if (currM) currency = currM[1];
         const catMatches = [...raw.matchAll(/\\"item_category\d*\\":\\"([^\\]+)\\"/g)];
         categories = [...new Set(catMatches.map((m) => m[1]))];
     }
@@ -238,26 +184,6 @@ const scrapeProduct = async (url, prefetchedHtml = null) => {
     const productIdMatch = html.match(/data-product_id="(\d+)"/);
     const productId = productIdMatch ? parseInt(productIdMatch[1], 10) : null;
 
-    // Price — only visible when authenticated
-    let price = null;
-    let originalPrice = null;
-    const priceParaMatch = html.match(/<p[^>]*class="[^"]*price[^"]*"[^>]*>([\s\S]*?)<\/p>/);
-    if (priceParaMatch) {
-        const priceHtml = priceParaMatch[1];
-        const bdiMatches = [...priceHtml.matchAll(/<bdi>([\s\S]*?)<\/bdi>/g)];
-        const parsedPrices = bdiMatches
-            .map((m) => parseFloat(m[1].replace(/[^\d,\.]/g, '').replace(',', '.')))
-            .filter((p) => !isNaN(p));
-
-        if (parsedPrices.length >= 2) {
-            // <del> is original, <ins> is sale price
-            originalPrice = parsedPrices[0];
-            price = parsedPrices[1];
-        } else if (parsedPrices.length === 1) {
-            price = parsedPrices[0];
-        }
-    }
-
     // Variant options — extract attribute names and values from the form
     const variants = [];
     const variantOptionMatches = [...html.matchAll(/class="[^"]*variations[^"]*"[\s\S]*?<select[^>]*name="attribute_([^"]+)"[^>]*>([\s\S]*?)<\/select>/g)];
@@ -277,9 +203,6 @@ const scrapeProduct = async (url, prefetchedHtml = null) => {
         title,
         sku,
         brand,
-        price,
-        originalPrice,
-        currency,
         availability,
         categories,
         breadcrumbs,
@@ -325,16 +248,6 @@ const crawlCategory = async (baseUrl, firstPageHtml) => {
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
-if (username && password) {
-    try {
-        await login();
-    } catch (err) {
-        log.warning(`Login error: ${err.message} — continuing without price data.`);
-    }
-} else {
-    log.info('No credentials provided — scraping public data only. Prices will not be available.');
-}
-
 const productUrls = new Map(); // url -> prefetched html (or null for category-discovered URLs)
 
 for (const entry of startUrls) {
