@@ -1,0 +1,58 @@
+{
+    "title": "Kkami.nl Product Scraper",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "startUrls": {
+            "title": "Start URLs",
+            "type": "array",
+            "description": "One or more kkami.nl URLs to scrape. Accepts product pages (e.g. https://www.kkami.nl/shop/child/child-unisex/madeleine-set-set-of-3/) and category or brand pages (e.g. https://www.kkami.nl/brand/bonito/). Category pages are automatically paginated — all products across all pages are scraped.",
+            "editor": "stringList",
+            "prefill": ["https://www.kkami.nl/brand/bonito/"],
+            "items": {
+                "type": "string"
+            }
+        },
+        "maxProducts": {
+            "title": "Max Products",
+            "type": "integer",
+            "description": "Maximum total number of products to scrape across all input URLs. Set to 0 to scrape all products found. Useful for test runs.",
+            "editor": "number",
+            "default": 0,
+            "minimum": 0
+        },
+        "username": {
+            "title": "Kkami Username (optional)",
+            "type": "string",
+            "description": "Your kkami.nl account username or email address. When provided together with a password, the actor logs in before scraping so that product prices are included in the output. Leave blank to scrape public data only.",
+            "editor": "textfield"
+        },
+        "password": {
+            "title": "Kkami Password (optional)",
+            "type": "string",
+            "description": "Your kkami.nl account password. Required together with a username to enable authenticated scraping and unlock price data. Stored as a secret and never logged.",
+            "editor": "textfield",
+            "isSecret": true
+        },
+        "proxyConfiguration": {
+            "title": "Proxy Configuration",
+            "type": "object",
+            "description": "Proxy settings for requests. Enable Apify Proxy (Residential) if requests are blocked. Not required for most runs.",
+            "editor": "proxy",
+            "default": { "useApifyProxy": false }
+        },
+        "datasetId": {
+            "title": "Dataset ID (optional)",
+            "type": "string",
+            "description": "ID of an existing Apify dataset to append scraped products to. The actor writes results to this dataset in addition to its default run dataset, useful for aggregating output from multiple runs. Leave blank to use only the default dataset for this run.",
+            "editor": "textfield"
+        },
+        "runId": {
+            "title": "Run ID (optional)",
+            "type": "string",
+            "description": "ID of an existing Apify actor run to associate results with. Used when chaining actors in multi-step pipelines or integrations. Leave blank for standalone runs.",
+            "editor": "textfield"
+        }
+    },
+    "required": ["startUrls"]
+}

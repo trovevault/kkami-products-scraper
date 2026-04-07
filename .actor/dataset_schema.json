@@ -1,0 +1,27 @@
+{
+    "actorSpecification": 1,
+    "title": "Kkami Product",
+    "description": "A single product scraped from kkami.nl.",
+    "views": {
+        "overview": {
+            "title": "Overview",
+            "transformation": {
+                "fields": ["title", "sku", "price", "originalPrice", "currency", "availability", "brand", "categories", "url"]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "title": { "label": "Title", "format": "text" },
+                    "sku": { "label": "SKU", "format": "text" },
+                    "price": { "label": "Price", "format": "number" },
+                    "originalPrice": { "label": "Original Price", "format": "number" },
+                    "currency": { "label": "Currency", "format": "text" },
+                    "availability": { "label": "Availability", "format": "text" },
+                    "brand": { "label": "Brand", "format": "text" },
+                    "categories": { "label": "Categories", "format": "text" },
+                    "url": { "label": "URL", "format": "link" }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "Kkami Products",
+    "description": "Products scraped from kkami.nl.",
+    "properties": {
+        "dataset": {
+            "type": "string",
+            "title": "Products Dataset",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "name": "kkami-products-scraper",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Apify actor to scrape product data from kkami.nl",
+    "main": "src/main.js",
+    "scripts": {
+        "start": "node src/main.js"
+    },
+    "dependencies": {
+        "apify": "^3",
+        "undici": "^6"
+    },
+    "engines": {
+        "node": ">=18"
+    }
+}
