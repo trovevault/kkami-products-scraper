@@ -112,10 +112,12 @@ const login = async () => {
     if (responseHtml.includes('woocommerce-error') || responseHtml.includes('woocommerce-login-nonce')) {
         const errMatch = responseHtml.match(/<li>(.*?)<\/li>/s);
         const msg = errMatch ? errMatch[1].replace(/<[^>]+>/g, '').trim() : 'Invalid credentials.';
-        throw new Error(`Login failed: ${msg}`);
+        log.warning(`Login failed: ${msg} — continuing without price data.`);
+        return false;
     }
 
     log.info('Login successful — price data will be included in output.');
+    return true;
 };
 
 // ---------------------------------------------------------------------------
@@ -324,7 +326,11 @@ const crawlCategory = async (baseUrl, firstPageHtml) => {
 // Main
 // ---------------------------------------------------------------------------
 if (username && password) {
-    await login();
+    try {
+        await login();
+    } catch (err) {
+        log.warning(`Login error: ${err.message} — continuing without price data.`);
+    }
 } else {
     log.info('No credentials provided — scraping public data only. Prices will not be available.');
 }
