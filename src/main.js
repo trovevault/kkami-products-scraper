@@ -184,9 +184,9 @@ const scrapeProduct = async (url, prefetchedHtml = null) => {
     const productIdMatch = html.match(/data-product_id="(\d+)"/);
     const productId = productIdMatch ? parseInt(productIdMatch[1], 10) : null;
 
-    // Variant options — extract attribute names and values from the form
+    // Variant options — extract all attribute selects (color, size, etc.)
     const variants = [];
-    const variantOptionMatches = [...html.matchAll(/class="[^"]*variations[^"]*"[\s\S]*?<select[^>]*name="attribute_([^"]+)"[^>]*>([\s\S]*?)<\/select>/g)];
+    const variantOptionMatches = [...html.matchAll(/<select[^>]*name="attribute_([^"]+)"[^>]*>([\s\S]*?)<\/select>/g)];
     for (const [, attrName, optionsHtml] of variantOptionMatches) {
         const optionValues = [...optionsHtml.matchAll(/<option[^>]*value="([^"]+)"/g)].map((m) => m[1]);
         if (optionValues.length) {
