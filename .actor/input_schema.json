@@ -8,7 +8,7 @@
             "type": "array",
             "description": "One or more kkami.nl URLs to scrape. Accepts product pages (e.g. https://www.kkami.nl/shop/child/child-unisex/madeleine-set-set-of-3/) and category or brand pages (e.g. https://www.kkami.nl/brand/bonito/). Category pages are automatically paginated — all products across all pages are scraped.",
             "editor": "stringList",
-            "prefill": ["https://www.kkami.nl/brand/bonito/"],
+            "prefill": ["https://www.kkami.nl/shop/child/child-unisex/madeleine-set-set-of-3/"],
             "items": {
                 "type": "string"
             }
