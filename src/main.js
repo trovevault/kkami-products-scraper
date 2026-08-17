@@ -344,7 +344,7 @@ await Actor.setValue('RUN_SUMMARY', {
 if (count === 0) {
     const blocked = failedStartUrls.some(({ statusCode }) => statusCode === 403 || statusCode === 429);
     await Actor.fail(blocked
-        ? 'KKAMI blocked every start URL. Enable Apify Proxy with the RESIDENTIAL group.'
+        ? 'KKAMI blocked every start URL after retries. The source currently requires interactive human verification.'
         : 'No products could be extracted from the supplied KKAMI URLs.');
 }
 

@@ -55,7 +55,7 @@ Category and brand pages are paginated when the public page exposes pagination l
 
 1. Add one or more kkami.nl URLs to `startUrls`.
 2. Set `maxProducts` to a small number, such as 5, for a smoke test.
-3. Keep the default residential Apify Proxy enabled. KKAMI currently blocks many datacenter requests.
+3. Leave `proxyConfiguration` off by default. KKAMI may still require interactive human verification when a proxy is enabled.
 4. Run the actor and review the Overview dataset table.
 5. Export results as JSON, CSV, Excel, XML, or HTML from Apify.
 
@@ -77,7 +77,7 @@ Category and brand pages are paginated when the public page exposes pagination l
 | --- | --- | --- |
 | `startUrls` | Yes | Product, category, or brand URLs from kkami.nl. |
 | `maxProducts` | No | Maximum total products across all input URLs. Use `0` for no explicit cap. |
-| `proxyConfiguration` | No | Apify Proxy settings. Residential proxy is enabled by default because direct datacenter requests are commonly blocked. |
+| `proxyConfiguration` | No | Optional Apify Proxy settings. A proxy may not bypass KKAMI's interactive human-verification challenge. |
 | `datasetId` | No | Existing dataset to append product rows into. |
 | `runId` | No | Workflow identifier copied into run context for integrations. |
 
