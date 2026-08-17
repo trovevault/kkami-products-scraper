@@ -6,7 +6,7 @@
     "version": "0.1",
     "readme": "../README.md",
     "meta": {
-        "generatedBy": "Claude Code with Claude Sonnet 4.6"
+        "generatedBy": "Codex with GPT-5"
     },
     "input": "./input_schema.json",
     "output": "./output_schema.json",

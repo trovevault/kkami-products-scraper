@@ -47,26 +47,54 @@ const BASE_HEADERS = {
     'Accept-Language': 'nl-NL,nl;q=0.9,en;q=0.8',
 };
 
+const RETRYABLE_STATUS_CODES = new Set([403, 408, 425, 429, 500, 502, 503, 504]);
+const MAX_REQUEST_ATTEMPTS = 3;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const siteFetch = async (url, options = {}) => {
-    let dispatcher;
-    if (proxyConfiguration) {
-        const proxyUrl = await proxyConfiguration.newUrl();
-        dispatcher = new ProxyAgent(proxyUrl);
+    let lastResponse;
+    let lastError;
+
+    for (let attempt = 1; attempt <= MAX_REQUEST_ATTEMPTS; attempt += 1) {
+        try {
+            let dispatcher;
+            if (proxyConfiguration) {
+                const proxyUrl = await proxyConfiguration.newUrl();
+                dispatcher = new ProxyAgent(proxyUrl);
+            }
+
+            const jar = cookieHeader();
+            const response = await undiciFetch(url, {
+                ...options,
+                headers: {
+                    ...BASE_HEADERS,
+                    ...(jar ? { Cookie: jar } : {}),
+                    ...options.headers,
+                },
+                dispatcher,
+                signal: options.signal ?? AbortSignal.timeout(30_000),
+            });
+
+            parseCookieHeaders(response.headers);
+            lastResponse = response;
+            if (!RETRYABLE_STATUS_CODES.has(response.status) || attempt === MAX_REQUEST_ATTEMPTS) {
+                return response;
+            }
+
+            log.warning(`Request to ${url} returned HTTP ${response.status}; retrying (${attempt}/${MAX_REQUEST_ATTEMPTS}).`);
+            await response.body?.cancel();
+        } catch (error) {
+            lastError = error;
+            if (attempt === MAX_REQUEST_ATTEMPTS) throw error;
+            log.warning(`Request to ${url} failed; retrying (${attempt}/${MAX_REQUEST_ATTEMPTS}).`);
+        }
+
+        await sleep(500 * attempt);
     }
 
-    const jar = cookieHeader();
-    const response = await undiciFetch(url, {
-        ...options,
-        headers: {
-            ...BASE_HEADERS,
-            ...(jar ? { Cookie: jar } : {}),
-            ...options.headers,
-        },
-        dispatcher,
-    });
-
-    parseCookieHeaders(response.headers);
-    return response;
+    if (lastResponse) return lastResponse;
+    throw lastError ?? new Error(`Request failed for ${url}`);
 };
 
 // ---------------------------------------------------------------------------
@@ -249,6 +277,7 @@ const crawlCategory = async (baseUrl, firstPageHtml) => {
 // Main
 // ---------------------------------------------------------------------------
 const productUrls = new Map(); // url -> prefetched html (or null for category-discovered URLs)
+const failedStartUrls = [];
 
 for (const entry of startUrls) {
     const url = typeof entry === 'string' ? entry : entry.url;
@@ -257,6 +286,7 @@ for (const entry of startUrls) {
     const resp = await siteFetch(url);
     if (!resp.ok) {
         log.warning(`Could not fetch ${url} (HTTP ${resp.status}). Skipping.`);
+        failedStartUrls.push({ url, statusCode: resp.status });
         continue;
     }
     const html = await resp.text();
@@ -281,6 +311,7 @@ const urlList = maxProducts > 0
 log.info(`Scraping ${urlList.length} products...`);
 
 let count = 0;
+let productFailures = 0;
 for (const [url, prefetchedHtml] of urlList) {
     try {
         log.info(`[${count + 1}/${urlList.length}] ${url}`);
@@ -292,10 +323,29 @@ for (const [url, prefetchedHtml] of urlList) {
         }
     } catch (err) {
         log.error(`Failed to scrape ${url}: ${err.message}`);
-        await Actor.pushData({ url, error: err.message });
+        productFailures += 1;
+        const errorRow = { url, error: err.message };
+        await Actor.pushData(errorRow);
+        if (additionalDataset) await additionalDataset.pushData(errorRow);
     }
-    await new Promise((r) => setTimeout(r, 300));
+    await sleep(300);
 }
 
 log.info(`Done. Scraped ${count} products.`);
+await Actor.setValue('RUN_SUMMARY', {
+    inputUrls: startUrls.length,
+    discoveredProducts: urlList.length,
+    productsOutput: count,
+    productFailures,
+    failedStartUrls,
+    lookupStatus: count > 0 ? 'FOUND' : 'FAILED',
+});
+
+if (count === 0) {
+    const blocked = failedStartUrls.some(({ statusCode }) => statusCode === 403 || statusCode === 429);
+    await Actor.fail(blocked
+        ? 'KKAMI blocked every start URL. Enable Apify Proxy with the RESIDENTIAL group.'
+        : 'No products could be extracted from the supplied KKAMI URLs.');
+}
+
 await Actor.exit();

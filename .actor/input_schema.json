@@ -24,9 +24,12 @@
         "proxyConfiguration": {
             "title": "Proxy Configuration",
             "type": "object",
-            "description": "Proxy settings for requests. Enable Apify Proxy (Residential) if requests are blocked. Not required for most runs.",
+            "description": "Proxy settings for requests. Residential Apify Proxy is enabled by default because kkami.nl blocks requests from many datacenter networks.",
             "editor": "proxy",
-            "default": { "useApifyProxy": false }
+            "default": {
+                "useApifyProxy": true,
+                "apifyProxyGroups": ["RESIDENTIAL"]
+            }
         },
         "datasetId": {
             "title": "Dataset ID (optional)",
